@@ -16,16 +16,20 @@ Those concerns are enforced by upstream modules in the system.
 
 ---
 ### Request Flow
-
 Client
-  ↓
-API Gateway (Module 1 - Rate Limit)
-  ↓
-Auth + Roles (Module 2 & 3)
-  ↓
-Module 4 (Appwrite Wrapper APIs)
-  ↓
-Appwrite Cloud
+↓
+Module 1 – API Gateway
+(Rate Limiting, IP & API Key)
+↓
+Module 2 – API Key Validation
+(Redis + DB Lookup)
+↓
+Module 3 – Authorization
+(Role-based Access Control)
+↓
+Module 4 – Appwrite Wrapper APIs
+↓
+Appwrite Cloud Services
 
 ---
 ## What is Completed
