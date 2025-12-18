@@ -3,7 +3,7 @@ import cors from "cors";
 import dotenv from "dotenv";
 import swaggerUi from "swagger-ui-express";
 import swaggerSpec from "./docs/swagger";
-
+import { errorHandler } from "./middlewares/errorhandler";
 import databaseRoutes from "./routes/database.routes";
 
 dotenv.config();
@@ -18,5 +18,5 @@ app.get("/health", (req, res) => {
 });
 app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 app.use("/api/database", databaseRoutes);
-
+app.use(errorHandler);
 export default app;

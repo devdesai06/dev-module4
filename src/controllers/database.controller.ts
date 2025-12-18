@@ -1,21 +1,26 @@
-import { Request, Response } from "express";
+import { Request, Response, NextFunction } from "express";
 import { databases } from "../config/appwrite";
 import { ID } from "node-appwrite";
-import { createProjectSchema } from "../validators/project.schema";
 import { z } from "zod";
+
+import { createProjectSchema } from "../validators/project.schema";
+import { BadRequestError } from "../errors/errors";
+import { mapAppwriteError } from "../errors/appwriteErrorMapper";
 
 /**
  * Create Project
  */
-export const createProject = async (req: Request, res: Response) => {
+export const createProject = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
   const parsed = createProjectSchema.safeParse(req.body);
 
   if (!parsed.success) {
-    return res.status(400).json({
-      success: false,
-      error: "Invalid request data",
-      details: parsed.error.issues
-    });
+    return next(
+      new BadRequestError("Invalid request data")
+    );
   }
 
   const { title, description, createdBy } = parsed.data;
@@ -37,18 +42,19 @@ export const createProject = async (req: Request, res: Response) => {
       success: true,
       data: document
     });
-  } catch (error: any) {
-    return res.status(500).json({
-      success: false,
-      message: "Failed to create project"
-    });
+  } catch (error) {
+    return next(mapAppwriteError(error));
   }
 };
 
 /**
  * Get All Projects
  */
-export const getAllProjects = async (_req: Request, res: Response) => {
+export const getAllProjects = async (
+  _req: Request,
+  res: Response,
+  next: NextFunction
+) => {
   try {
     const documents = await databases.listDocuments(
       process.env.DATABASE_ID!,
@@ -59,30 +65,32 @@ export const getAllProjects = async (_req: Request, res: Response) => {
       success: true,
       data: documents.documents
     });
-  } catch (error: any) {
-    return res.status(500).json({
-      success: false,
-      message: "Failed to fetch projects"
-    });
+  } catch (error) {
+    return next(mapAppwriteError(error));
   }
 };
 
 /**
- * Get Project By ID
+ * Validation schema for project ID
  */
 const getProjectByIdSchema = z.object({
   id: z.string().min(1, "Project ID is required")
 });
 
-export const getProjectById = async (req: Request, res: Response) => {
+/**
+ * Get Project By ID
+ */
+export const getProjectById = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
   const parsed = getProjectByIdSchema.safeParse(req.params);
 
   if (!parsed.success) {
-    return res.status(400).json({
-      success: false,
-      error: "Invalid project id",
-      details: parsed.error.issues
-    });
+    return next(
+      new BadRequestError("Invalid project id")
+    );
   }
 
   const { id } = parsed.data;
@@ -98,10 +106,7 @@ export const getProjectById = async (req: Request, res: Response) => {
       success: true,
       data: document
     });
-  } catch (error: any) {
-    return res.status(404).json({
-      success: false,
-      message: "Project not found"
-    });
+  } catch (error) {
+    return next(mapAppwriteError(error));
   }
 };
